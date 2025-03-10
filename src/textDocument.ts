@@ -1,6 +1,6 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
-
+import { ImageHandler } from "./handlers/image";
 // text document extend
 class TextDocument extends EventEmitter {
     undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
@@ -9,7 +9,11 @@ class TextDocument extends EventEmitter {
     pieces: Piece[];
     blocks: any;
     selectAll: boolean = false;
+    imageHandler!: ImageHandler;
 
+    setImageHandler(imageHandler: ImageHandler) {
+        this.imageHandler = imageHandler
+    }
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -734,6 +738,9 @@ class TextDocument extends EventEmitter {
             //     break;
             case 'enter':
               this.triggerBackspaceEvents(document.activeElement);
+            case "image":
+                this.imageHandler.insertImageAtCursor(action.previousValue, action.id, action.start, action.end, action.dataId)
+                break;
             case 'insert':
               this.triggerBackspaceEvents(document.activeElement);
                 // console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
@@ -780,6 +787,8 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.toggleOrderedList1(action.dataId, action.id)
                 break;
+            case 'image':
+                this.imageHandler.insertImageAtCursor1(action.newValue, action.id, action.start, action.end)
                 break;
             // case 'listType':
             //     if (action.dataId !== undefined)

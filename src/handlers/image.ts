@@ -30,6 +30,7 @@ export class ImageHandler {
   }
 
   public insertImage(): void {
+
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "image/*";
@@ -47,12 +48,37 @@ export class ImageHandler {
     };
   }
 
-  public insertImageAtCursor(dataUrl: string): void {
-    const [start, end] = getSelectionRange(this.editorView);
+  public insertImageAtCursor(dataUrl: string, id: string = "", start1: number = 0, end1: number = 0, dataId1: string | null = ''): void {
+    const [start, end] = id === '' ? getSelectionRange(this.editorView) : [start1, end1];
+    if (end > start) {
+      console.log(this.document.selectedBlockId, dataId1, "this.document.selectedBlockId : dataId1")
+      this.document.deleteRange(start, end, id === '' ? this.document.selectedBlockId : dataId1);
+    }
+    console.log(this.document.undoStack, "document", this.document.blocks, this.document.selectedBlockId)
+    const blockOldIndex = this.document.blocks.findIndex((obj: any) => obj.dataId === this.document.selectedBlockId)
+    const previousValue = '';
+    const { uniqueId1, uniqueId2, uniqueId3 } = this.insertImageAtPosition(dataUrl, start, this.document.selectedBlockId);
+    const newValue = dataUrl;
+    const dataId = uniqueId1;
+    const _redoStackIds = this.document.redoStack.filter(obj => obj.id === id)
+    if (_redoStackIds.length === 0) {
+      console.log(this.document.selectedBlockId, dataId, "this.document.selectedBlockId : dataId1")
+      this.document.undoStack.push({ id: Date.now().toString(), start, end, action: 'image', previousValue, newValue, dataId });
+      this.document.redoStack = [];
+    }
+    const blockNewIndex = this.document.blocks.findIndex((obj: any) => obj.dataId === this.document.selectedBlockId)
+    console.log(this.document.undoStack, "document -", this.document.blocks[blockNewIndex - 1], this.document.selectedBlockId, blockNewIndex, blockOldIndex)
+    this.document.emit('documentChanged', this);
+  }
+
+  public insertImageAtCursor1(dataUrl: string, id: string = "", start: number, end: number): void {
+    // const [start, end] = getSelectionRange(this.editorView);
+    console.log(end, start, "end start")
     if (end > start) {
       this.document.deleteRange(start, end, this.document.selectedBlockId);
     }
     this.insertImageAtPosition(dataUrl, start, this.document.selectedBlockId);
+    this.document.emit('documentChanged', this);
   }
 
   public setCursorPostion(postion: number, dataId: string): void {
@@ -78,10 +104,11 @@ export class ImageHandler {
     dataUrl: string,
     position: number,
     dataId: string | null
-  ): void {
+  ): { uniqueId1: string, uniqueId2: string, uniqueId3: string } {
     const uniqueId1 = `data-id-${Date.now()}-${Math.random() * 1000}`;
     const uniqueId2 = `data-id-${Date.now()}-${Math.random() * 1000}`;
     const uniqueId3 = `data-id-${Date.now()}-${Math.random() * 1000}`;
+    console.log(uniqueId1, uniqueId2, uniqueId3, "document uid")
     const newImageBlock = {
       dataId: uniqueId1,
       class: "paragraph-block",
@@ -144,12 +171,12 @@ export class ImageHandler {
 
     this.document.blocks = updatedBlock;
 
-      this.document.deleteRange(
-        this.currentCursorLocation,
-        this.currentCursorLocation + remainingText.length,
-        this.document.selectedBlockId,
-        this.document.currentOffset
-      );
+    this.document.deleteRange(
+      this.currentCursorLocation,
+      this.currentCursorLocation + remainingText.length,
+      this.document.selectedBlockId,
+      this.document.currentOffset
+    );
 
     if (this.document.blocks.length > indexOfCurrentBlock + 1) {
       this.document.blocks.forEach((block: any, idx: number) => {
@@ -186,6 +213,7 @@ export class ImageHandler {
       sel?.removeAllRanges();
       sel?.addRange(range);
     }, 0);
+    return { uniqueId1, uniqueId2, uniqueId3 }
   }
 
   public createImageFragment(imageUrl: string, dataId: string) {
@@ -204,53 +232,53 @@ export class ImageHandler {
   }
 
   public addStyleToImage(dataId: string) {
-   if(!this.isCrossIconVisible){
-    const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
-    const span = div?.querySelector("span");
-    if (span) span.style.position = "relative";
-    const img = div?.querySelector("img");
-    if (img) {
-      img.style.border = "2px solid blue";
+    if (!this.isCrossIconVisible) {
+      const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
+      const span = div?.querySelector("span");
+      if (span) span.style.position = "relative";
+      const img = div?.querySelector("img");
+      if (img) {
+        img.style.border = "2px solid blue";
+      }
+      const cross = document.createElement("div");
+      cross.className = "image-cross";
+      cross.innerHTML = "x";
+      Object.assign(cross.style, {
+        position: "absolute",
+        top: "0",
+        left: "50%",
+        transform: "translate(-50%, 0)",
+        background: "#fff",
+        borderRadius: "50%",
+        width: "30px",
+        height: "30px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        border: "3px solid blue",
+        zIndex: "999",
+      });
+      cross.addEventListener(
+        "mouseover",
+        () => (cross.style.border = "3px solid black")
+      );
+      cross.addEventListener(
+        "mouseout",
+        () => (cross.style.border = "3px solid blue")
+      );
+
+      cross.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.deleteImage()
+      });
+
+
+      span?.appendChild(cross);
+      this.isImageHighlighted = true;
+      this.highLightedImageDataId = dataId;
+      this.isCrossIconVisible = true;
     }
-    const cross = document.createElement("div");
-    cross.className = "image-cross";
-    cross.innerHTML = "x";
-    Object.assign(cross.style, {
-      position: "absolute",
-      top: "0",
-      left: "50%",
-      transform: "translate(-50%, 0)",
-      background: "#fff",
-      borderRadius: "50%",
-      width: "30px",
-      height: "30px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      border: "3px solid blue",
-      zIndex: "999",
-    });
-    cross.addEventListener(
-      "mouseover",
-      () => (cross.style.border = "3px solid black")
-    );
-    cross.addEventListener(
-      "mouseout",
-      () => (cross.style.border = "3px solid blue")
-    );
-
-    cross.addEventListener("click", (e) => {  
-      e.stopPropagation();  
-          this.deleteImage()    
-    });
-
-  
-    span?.appendChild(cross);
-    this.isImageHighlighted = true;
-    this.highLightedImageDataId = dataId;
-    this.isCrossIconVisible = true;
-  }
   }
 
   public clearImageStyling() {
@@ -274,7 +302,7 @@ export class ImageHandler {
   }
 
   public deleteImage() {
-    
+
     this.document.blocks = this.document.blocks.filter(
       (block: any) => block.dataId !== this.highLightedImageDataId
     );

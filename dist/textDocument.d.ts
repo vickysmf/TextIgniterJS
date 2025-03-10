@@ -1,5 +1,6 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
+import { ImageHandler } from "./handlers/image";
 declare class TextDocument extends EventEmitter {
     undoStack: {
         id: string;
@@ -23,6 +24,8 @@ declare class TextDocument extends EventEmitter {
     pieces: Piece[];
     blocks: any;
     selectAll: boolean;
+    imageHandler: ImageHandler;
+    setImageHandler(imageHandler: ImageHandler): void;
     private _selectedBlockId;
     get selectedBlockId(): string | null;
     set selectedBlockId(value: string | null);
@@ -45,8 +48,11 @@ declare class TextDocument extends EventEmitter {
     private getDataIdFromNode;
     getCursorOffset(container: HTMLElement): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
-    toggleOrderedList(dataId: string | null, listStart?: number): void;
-    toggleUnorderedList(dataId: string | null): void;
+    toggleOrderedList(dataId: string | null, id?: string): void;
+    toggleOrderedList1(dataId: string | null, id?: string): void;
+    toggleUnorderedList(dataId: string | null, id?: string): void;
+    toggleUnorderedList1(dataId: string | null, id?: string): void;
+    updateOrderedListNumbers(): void;
     getRangeText(start: number, end: number): string;
     getRangeTextPiece(start: number, end: number): {
         rangeText: string;
