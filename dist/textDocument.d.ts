@@ -32,12 +32,15 @@ declare class TextDocument extends EventEmitter {
     currentOffset: number;
     constructor();
     getPlainText(): string;
+    triggerBackspaceEvents(target: any): void;
+    triggerKeyPress(target: any, key: any): void;
+    simulateEnterPress(target: any): void;
     insertAt(text: string, attributes: {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
         hyperlink?: boolean | string;
-    }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string): void;
+    }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string, isSynthetic?: boolean): void;
     setCursorPositionUsingOffset(element: HTMLElement, offset: number): void;
     deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number): void;
     deleteBlocks(): void;

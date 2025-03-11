@@ -49,36 +49,47 @@ export class ImageHandler {
   }
 
   public insertImageAtCursor(dataUrl: string, id: string = "", start1: number = 0, end1: number = 0, dataId1: string | null = ''): void {
+    console.log(dataUrl,id, start1, end1, dataId1, " uniqueId1, uniqueId2, uniqueId3 ---0")
     const [start, end] = id === '' ? getSelectionRange(this.editorView) : [start1, end1];
     if (end > start) {
+      this.document.selectedBlockId = id === '' ? this.document.selectedBlockId : dataId1
       console.log(this.document.selectedBlockId, dataId1, "this.document.selectedBlockId : dataId1")
-      this.document.deleteRange(start, end, id === '' ? this.document.selectedBlockId : dataId1);
+      this.document.deleteRange(start, end, this.document.selectedBlockId);
     }
+
+    // if (dataId1 === '') {
+    // this.document.selectedBlockId = dataId1;
+
+
     console.log(this.document.undoStack, "document", this.document.blocks, this.document.selectedBlockId)
     const blockOldIndex = this.document.blocks.findIndex((obj: any) => obj.dataId === this.document.selectedBlockId)
     const previousValue = '';
     const { uniqueId1, uniqueId2, uniqueId3 } = this.insertImageAtPosition(dataUrl, start, this.document.selectedBlockId);
     const newValue = dataUrl;
-    const dataId = uniqueId1;
+    const dataId = dataId1 === "" ? uniqueId1 : dataId1;
     const _redoStackIds = this.document.redoStack.filter(obj => obj.id === id)
+    console.log("uniqueId1, uniqueId2, uniqueId3 ---1", uniqueId1, uniqueId2, uniqueId3, this.document.blocks, _redoStackIds)
     if (_redoStackIds.length === 0) {
       console.log(this.document.selectedBlockId, dataId, "this.document.selectedBlockId : dataId1")
       this.document.undoStack.push({ id: Date.now().toString(), start, end, action: 'image', previousValue, newValue, dataId });
       this.document.redoStack = [];
     }
+    // }
     const blockNewIndex = this.document.blocks.findIndex((obj: any) => obj.dataId === this.document.selectedBlockId)
     console.log(this.document.undoStack, "document -", this.document.blocks[blockNewIndex - 1], this.document.selectedBlockId, blockNewIndex, blockOldIndex)
+    console.log("uniqueId1, uniqueId2, uniqueId3 ---2", uniqueId1, uniqueId2, uniqueId3, this.document.blocks, _redoStackIds)
     this.document.emit('documentChanged', this);
   }
 
   public insertImageAtCursor1(dataUrl: string, id: string = "", start: number, end: number): void {
+    console.log("runn...")
     // const [start, end] = getSelectionRange(this.editorView);
     console.log(end, start, "end start")
     if (end > start) {
       this.document.deleteRange(start, end, this.document.selectedBlockId);
     }
     this.insertImageAtPosition(dataUrl, start, this.document.selectedBlockId);
-    this.document.emit('documentChanged', this);
+    this.document.emit('documentChanged', this);  
   }
 
   public setCursorPostion(postion: number, dataId: string): void {
