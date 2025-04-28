@@ -15,6 +15,7 @@ var TextIgniterComponent = class extends HTMLElement {
     return ["config"];
   }
   attributeChangedCallback(name, oldValue, newValue) {
+    console.log(name, oldValue, newValue,"config TextIgniterComponent constructor called");
     if (name === "config" && newValue !== oldValue) {
       try {
         console.log(newValue);
